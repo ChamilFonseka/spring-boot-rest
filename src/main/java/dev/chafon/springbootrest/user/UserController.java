@@ -1,6 +1,7 @@
 package dev.chafon.springbootrest.user;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,5 +20,10 @@ public class UserController {
     @GetMapping
     List<User> getUsers() {
         return userService.getUsers();
+    }
+
+    @GetMapping("/{id}")
+    User getUser(@PathVariable Integer id) {
+        return userService.getUser(id);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,5 +52,31 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].name").value("Jane Doe"))
                 .andExpect(jsonPath("$[1].username").value("janeD"))
                 .andExpect(jsonPath("$[1].email").value("jane.doe@mail.com"));
+    }
+
+    @Test
+    void shouldReturnUserWith200WhenUserExists() throws Exception {
+        User user = new User(anyInt(), "John Doe", "johnD", "john.doe@mail.com");
+        given(userService.getUser(1))
+                .willReturn(user);
+
+        mvc.perform(get(API_PATH + "/{id}", user.id()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.id()))
+                .andExpect(jsonPath("$.name").value(user.name()))
+                .andExpect(jsonPath("$.username").value(user.username()))
+                .andExpect(jsonPath("$.email").value(user.email()));
+    }
+
+    @Test
+    void shouldReturn404WhenUserDoesNotExist() throws Exception {
+        given(userService.getUser(100))
+                .willThrow(new UserNotFoundException("User not found with the id: " + 100));
+
+        mvc.perform(get(API_PATH + "/{id}", 100))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail")
+                        .value("User not found with the id: " + 100));
+
     }
 }
