@@ -13,4 +13,8 @@ public class UserService {
     public User getUser(Integer id) {
         return null;
     }
+
+    public User createUser(User user) {
+        return null;
+    }
 }

@@ -1,19 +1,24 @@
 package dev.chafon.springbootrest.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -23,6 +28,9 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private final String API_PATH = "/api/v1/users";
 
@@ -78,5 +86,53 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.detail")
                         .value("User not found with the id: " + 100));
 
+    }
+
+    @Test
+    void shouldCreateUserThenReturnCreatedUserAndLocationWith201() throws Exception {
+        User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+        User userCreated = new User(123, "John Doe", "johnD", "john.doe@mail.com");
+
+        given(userService.createUser(userToCreate))
+                .willReturn(userCreated);
+
+        MvcResult mvcResult = mvc.perform(post(API_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToCreate)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(userCreated.id()))
+                .andExpect(header().exists("Location"))
+                .andReturn();
+
+        String locationHeader = mvcResult.getResponse().getHeader("Location");
+
+        assertThat(locationHeader).endsWith(API_PATH + "/" + userCreated.id());
+    }
+
+    @Test
+    void shouldReturn400WhenUserToCreateIsInvalid() throws Exception {
+        User userToCreate = new User(null, null, null, null);
+
+        mvc.perform(post(API_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToCreate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", containsString("Name cannot be blank")))
+                .andExpect(jsonPath("$.detail", containsString("Username cannot be blank")))
+                .andExpect(jsonPath("$.detail", containsString("Email cannot be blank")));
+    }
+
+    @Test
+    void shouldReturn409WhenUserAlreadyExists() throws Exception {
+        User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+
+        given(userService.createUser(userToCreate))
+                .willThrow(new UserAlreadyExistsException("User already exists with the username: " + userToCreate.username()));
+
+        mvc.perform(post(API_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToCreate)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("User already exists with the username: " + userToCreate.username())));
     }
 }
