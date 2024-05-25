@@ -110,7 +110,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturn400WhenUserToCreateIsInvalid() throws Exception {
+    void shouldNotCreateUserWhenUserToCreateIsInvalidThenReturn400() throws Exception {
         User userToCreate = new User(null, null, null, null);
 
         mvc.perform(post(API_PATH)
@@ -123,7 +123,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturn409WhenUserAlreadyExists() throws Exception {
+    void shouldNotCreateUserWhenUserAlreadyExistsThenReturn409() throws Exception {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
         given(userService.createUser(userToCreate))
