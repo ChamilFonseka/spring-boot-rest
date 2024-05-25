@@ -13,7 +13,6 @@ import java.util.List;
 import static dev.chafon.springbootrest.user.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -65,8 +64,8 @@ class UserControllerTest {
 
     @Test
     void shouldReturnUserWith200WhenUserExists() throws Exception {
-        User user = new User(anyInt(), "John Doe", "johnD", "john.doe@mail.com");
-        given(userService.getUser(1))
+        User user = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+        given(userService.getUser(user.id()))
                 .willReturn(user);
 
         mvc.perform(get(API_PATH + "/{id}", user.id()))
