@@ -79,7 +79,7 @@ class UserControllerTest {
     @Test
     void shouldReturn404WhenUserDoesNotExist() throws Exception {
         int idToGet = 100;
-        willThrow(new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + idToGet))
+        willThrow(new UserNotFoundException(idToGet))
                 .given(userService).getUser(idToGet);
 
         mvc.perform(get(API_PATH + "/{id}", idToGet))
@@ -127,7 +127,7 @@ class UserControllerTest {
     void shouldNotCreateUserWhenUserAlreadyExistsThenReturn409() throws Exception {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
-        willThrow(new UserAlreadyExistsException(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + userToCreate.username()))
+        willThrow(new UserAlreadyExistsException(userToCreate.username()))
                 .given(userService).createUser(userToCreate);
 
         mvc.perform(post(API_PATH)
@@ -164,7 +164,7 @@ class UserControllerTest {
     void shouldNotUpdateUserWhenUserToUpdateDoesNotExistThenReturn404() throws Exception {
         User userToUpdate = new User(100, "John Doe", "johnD", "john.doe@mail.com");
 
-        willThrow(new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + userToUpdate.id()))
+        willThrow(new UserNotFoundException(userToUpdate.id()))
                 .given(userService).updateUser(userToUpdate.id(), userToUpdate);
 
         mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
@@ -183,7 +183,7 @@ class UserControllerTest {
     @Test
     void shouldReturn404WhenDeletingUserNotExists() throws Exception {
         int idToDelete = 100;
-        willThrow(new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + idToDelete))
+        willThrow(new UserNotFoundException(idToDelete))
                 .given(userService).deleteUser(idToDelete);
 
         mvc.perform(delete(API_PATH + "/{id}", idToDelete))

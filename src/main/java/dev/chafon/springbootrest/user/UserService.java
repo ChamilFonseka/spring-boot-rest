@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static dev.chafon.springbootrest.user.Constants.USER_ALREADY_EXISTS_EXCEPTION_MESSAGE;
-import static dev.chafon.springbootrest.user.Constants.USER_NOT_FOUND_EXCEPTION_MESSAGE;
 
 @Service
 public class UserService {
@@ -23,12 +22,12 @@ public class UserService {
     public User getUser(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() ->
-                        new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + id));
+                        new UserNotFoundException(id));
     }
 
     public User createUser(User user) {
         if(repository.existsByUsername(user.username())) {
-            throw new UserAlreadyExistsException(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + user.username());
+            throw new UserAlreadyExistsException(user.username());
         }
         return repository.save(user);
     }
@@ -53,13 +52,13 @@ public class UserService {
                                 user.email()
                         )),
                         () -> {
-                            throw new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + id);
+                            throw new UserNotFoundException(id);
                         });
     }
 
     public void deleteUser(Integer id) {
         if(!repository.existsById(id)) {
-            throw new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + id);
+            throw new UserNotFoundException(id);
         }
         repository.deleteById(id);
     }
