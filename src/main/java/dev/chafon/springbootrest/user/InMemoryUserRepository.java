@@ -23,7 +23,7 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return Optional.empty();
+    public boolean existsByUsername(String username) {
+        return false;
     }
 }

@@ -27,12 +27,9 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        repository.findByUsername(user.username())
-                .ifPresent(existingUser -> {
-                    throw new UserAlreadyExistsException(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE
-                            + existingUser.username());
-                });
-
+        if(repository.existsByUsername(user.username())) {
+            throw new UserAlreadyExistsException(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + user.username());
+        }
         return repository.save(user);
     }
 

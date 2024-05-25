@@ -181,7 +181,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldNotDeleteUserWhenUserDoesNotExistThenReturn404() throws Exception {
+    void shouldReturn404WhenDeletingUserNotExists() throws Exception {
         int idToDelete = 100;
         willThrow(new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + idToDelete))
                 .given(userService).deleteUser(idToDelete);

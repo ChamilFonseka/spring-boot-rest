@@ -110,17 +110,16 @@ class UserServiceTest {
 
     @Test
     void shouldThrowUserAlreadyExistsExceptionWhenUserExists() {
-        User existingUser = new User(1, "John Doe", "johnD", "john.doe@mail.com");
         User userToCreate = new User(null, "John Dean", "johnD", "john.dean@mail.com");
 
-        given(userRepository.findByUsername(userToCreate.username()))
-                .willReturn(Optional.of(existingUser));
+        given(userRepository.existsByUsername(userToCreate.username()))
+                .willReturn(true);
 
         assertThatThrownBy(() -> userService.createUser(userToCreate))
                 .isInstanceOf(UserAlreadyExistsException.class)
                 .hasMessage(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + userToCreate.username());
 
-        verify(userRepository).findByUsername(userToCreate.username());
+        verify(userRepository).existsByUsername(userToCreate.username());
     }
 
     @Test

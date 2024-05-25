@@ -7,5 +7,5 @@ public interface UserRepository {
     List<User> findAll();
     Optional<User> findById(Integer id);
     User save(User userToCreate);
-    Optional<User> findByUsername(String username);
+    boolean existsByUsername(String username);
 }
