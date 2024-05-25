@@ -16,4 +16,14 @@ public class InMemoryUserRepository implements UserRepository {
     public Optional<User> findById(Integer id) {
         return Optional.empty();
     }
+
+    @Override
+    public User save(User userToCreate) {
+        return null;
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return Optional.empty();
+    }
 }
