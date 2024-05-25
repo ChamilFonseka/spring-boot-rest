@@ -80,7 +80,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldSaveUserAndReturnIt() {
+    void shouldCreateUserAndReturnIt() {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
         int expectedId = 123;
@@ -109,4 +109,5 @@ class UserServiceTest {
 
         verify(userRepository).findByUsername(userToCreate.username());
     }
+
 }
