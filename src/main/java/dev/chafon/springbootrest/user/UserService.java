@@ -58,5 +58,9 @@ public class UserService {
     }
 
     public void deleteUser(Integer id) {
+        if(!repository.existsById(id)) {
+            throw new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + id);
+        }
+        repository.deleteById(id);
     }
 }

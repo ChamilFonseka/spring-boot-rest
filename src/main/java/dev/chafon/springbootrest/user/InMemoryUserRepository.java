@@ -26,4 +26,14 @@ public class InMemoryUserRepository implements UserRepository {
     public boolean existsByUsername(String username) {
         return false;
     }
+
+    @Override
+    public void deleteById(Integer id) {
+
+    }
+
+    @Override
+    public boolean existsById(Integer id) {
+        return false;
+    }
 }

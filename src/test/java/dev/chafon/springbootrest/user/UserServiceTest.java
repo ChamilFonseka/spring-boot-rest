@@ -109,7 +109,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserAlreadyExistsExceptionWhenUserExists() {
+    void shouldThrowUserAlreadyExistsExceptionWhenUpdatingUserExists() {
         User userToCreate = new User(null, "John Dean", "johnD", "john.dean@mail.com");
 
         given(userRepository.existsByUsername(userToCreate.username()))
@@ -165,5 +165,29 @@ class UserServiceTest {
         assertThat(capturedUser.name()).isEqualTo(userToUpdate.name());
         assertThat(capturedUser.username()).isEqualTo(existingUser.username());
         assertThat(capturedUser.email()).isEqualTo(userToUpdate.email());
+    }
+
+    @Test
+    void shouldDelete() {
+        Integer idToDelete = 1;
+        given(userRepository.existsById(idToDelete)).willReturn(true);
+
+        userService.deleteUser(idToDelete);
+
+        verify(userRepository).existsById(idToDelete);
+        verify(userRepository).deleteById(idToDelete);
+    }
+
+    @Test
+    void shouldThrowUserNotFoundExceptionWhenDeletingUserNotExist() {
+        Integer idToDelete = 1;
+        given(userRepository.existsById(idToDelete)).willReturn(false);
+
+        assertThatThrownBy(() -> userService.deleteUser(idToDelete))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage(USER_NOT_FOUND_EXCEPTION_MESSAGE + idToDelete);
+
+        verify(userRepository).existsById(idToDelete);
+        verify(userRepository, never()).deleteById(idToDelete);
     }
 }

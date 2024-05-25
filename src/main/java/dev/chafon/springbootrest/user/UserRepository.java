@@ -8,4 +8,6 @@ public interface UserRepository {
     Optional<User> findById(Integer id);
     User save(User userToCreate);
     boolean existsByUsername(String username);
+    void deleteById(Integer id);
+    boolean existsById(Integer id);
 }
