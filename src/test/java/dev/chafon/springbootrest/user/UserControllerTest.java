@@ -15,9 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.doThrow;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
@@ -135,4 +135,42 @@ class UserControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail", containsString("User already exists with the username: " + userToCreate.username())));
     }
+
+    @Test
+    void shouldUpdateUserThenReturn202() throws Exception {
+        User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+
+        mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToUpdate)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldNotUpdateUserWhenUserToUpdateIsInvalidThenReturn400() throws Exception {
+        User userToUpdate = new User(1, null, null, null);
+
+        mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", containsString("Name cannot be blank")))
+                .andExpect(jsonPath("$.detail", containsString("Username cannot be blank")))
+                .andExpect(jsonPath("$.detail", containsString("Email cannot be blank")));
+    }
+
+    @Test
+    void shouldNotUpdateUserWhenUserToUpdateDoesNotExistThenReturn404() throws Exception {
+        User userToUpdate = new User(100, "John Doe", "johnD", "john.doe@mail.com");
+
+        doThrow(new UserNotFoundException("User not found with the id: " + userToUpdate.id()))
+                .when(userService).updateUser(userToUpdate);
+
+        mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userToUpdate)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", containsString("User not found with the id: " + userToUpdate.id())));
+    }
+
 }

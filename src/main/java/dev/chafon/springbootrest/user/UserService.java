@@ -17,4 +17,7 @@ public class UserService {
     public User createUser(User user) {
         return null;
     }
+
+    public void updateUser(User userToUpdate) {
+    }
 }
