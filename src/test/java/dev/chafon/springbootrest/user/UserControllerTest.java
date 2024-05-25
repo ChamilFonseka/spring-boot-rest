@@ -173,4 +173,19 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.detail", containsString("User not found with the id: " + userToUpdate.id())));
     }
 
+    @Test
+    void shouldDeleteUserThenReturn204() throws Exception {
+        mvc.perform(delete(API_PATH + "/{id}", 1))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldNotDeleteUserWhenUserDoesNotExistThenReturn404() throws Exception {
+        doThrow(new UserNotFoundException("User not found with the id: " + 100))
+                .when(userService).deleteUser(100);
+
+        mvc.perform(delete(API_PATH + "/{id}", 100))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", containsString("User not found with the id: " + 100)));
+    }
 }

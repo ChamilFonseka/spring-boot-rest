@@ -20,4 +20,7 @@ public class UserService {
 
     public void updateUser(User userToUpdate) {
     }
+
+    public void deleteUser(Integer id) {
+    }
 }
