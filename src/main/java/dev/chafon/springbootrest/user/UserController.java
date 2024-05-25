@@ -43,8 +43,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void updateUser(@Valid @RequestBody User userToUpdate) {
-        userService.updateUser(userToUpdate);
+    void updateUser(@PathVariable Integer id, @Valid @RequestBody User userToUpdate) {
+        userService.updateUser(id, userToUpdate);
     }
 
     @DeleteMapping("/{id}")

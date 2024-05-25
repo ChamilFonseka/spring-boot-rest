@@ -165,7 +165,7 @@ class UserControllerTest {
         User userToUpdate = new User(100, "John Doe", "johnD", "john.doe@mail.com");
 
         willThrow(new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + userToUpdate.id()))
-                .given(userService).updateUser(userToUpdate);
+                .given(userService).updateUser(userToUpdate.id(), userToUpdate);
 
         mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
                         .contentType(APPLICATION_JSON)

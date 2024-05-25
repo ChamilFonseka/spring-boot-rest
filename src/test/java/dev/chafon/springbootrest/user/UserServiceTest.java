@@ -2,6 +2,8 @@ package dev.chafon.springbootrest.user;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -14,6 +16,7 @@ import static dev.chafon.springbootrest.user.Constants.USER_NOT_FOUND_EXCEPTION_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
@@ -23,6 +26,9 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
+
+    @Captor
+    private ArgumentCaptor<User> userCaptor;
 
     @Test
     void shouldReturnUsers() {
@@ -93,6 +99,13 @@ class UserServiceTest {
 
         assertThat(userCreated).isNotNull();
         assertThat(userCreated.id()).isEqualTo(expectedId);
+
+        verify(userRepository).save(userCaptor.capture());
+
+        User capturedUser = userCaptor.getValue();
+        assertThat(capturedUser.name()).isEqualTo(userToCreate.name());
+        assertThat(capturedUser.username()).isEqualTo(userToCreate.username());
+        assertThat(capturedUser.email()).isEqualTo(userToCreate.email());
     }
 
     @Test
@@ -110,4 +123,48 @@ class UserServiceTest {
         verify(userRepository).findByUsername(userToCreate.username());
     }
 
+    @Test
+    void shouldUpdateUser() {
+        User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+        given(userRepository.findById(userToUpdate.id())).willReturn(Optional.of(userToUpdate));
+
+        userService.updateUser(userToUpdate.id(), userToUpdate);
+
+        verify(userRepository).findById(userToUpdate.id());
+        verify(userRepository).save(userCaptor.capture());
+
+        User capturedUser = userCaptor.getValue();
+        assertThat(capturedUser.name()).isEqualTo(userToUpdate.name());
+        assertThat(capturedUser.username()).isEqualTo(userToUpdate.username());
+        assertThat(capturedUser.email()).isEqualTo(userToUpdate.email());
+    }
+
+    @Test
+    void shouldThrowUserNotFoundExceptionWhenUserNotExist() {
+        User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+
+        assertThatThrownBy(() -> userService.updateUser(userToUpdate.id(), userToUpdate))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage(USER_NOT_FOUND_EXCEPTION_MESSAGE + userToUpdate.id());
+
+        verify(userRepository).findById(userToUpdate.id());
+        verify(userRepository, never()).save(userToUpdate);
+    }
+
+    @Test
+    void shouldNotUpdateTheUsernameAlways() {
+        User existingUser = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+        User userToUpdate = new User(1, "J D", "johnDoe", "john.doe@abc.com");
+        given(userRepository.findById(userToUpdate.id())).willReturn(Optional.of(existingUser));
+
+        userService.updateUser(userToUpdate.id(), userToUpdate);
+
+        verify(userRepository).findById(userToUpdate.id());
+        verify(userRepository).save(userCaptor.capture());
+
+        User capturedUser = userCaptor.getValue();
+        assertThat(capturedUser.name()).isEqualTo(userToUpdate.name());
+        assertThat(capturedUser.username()).isEqualTo(existingUser.username());
+        assertThat(capturedUser.email()).isEqualTo(userToUpdate.email());
+    }
 }
