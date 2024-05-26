@@ -97,17 +97,13 @@ class UserControllerTest {
         given(userService.createUser(userToCreate))
                 .willReturn(userCreated);
 
-        MvcResult mvcResult = mvc.perform(post(API_PATH)
+        mvc.perform(post(API_PATH)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userToCreate)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", equalTo(userCreated.id())))
                 .andExpect(header().exists("Location"))
-                .andReturn();
-
-        String locationHeader = mvcResult.getResponse().getHeader("Location");
-
-        assertThat(locationHeader).endsWith(API_PATH + "/" + userCreated.id());
+                .andExpect(header().string("Location", "http://localhost" + API_PATH + "/" + userCreated.id()));
     }
 
     @Test
