@@ -114,7 +114,7 @@ class ApplicationTests {
 
 	@Test
 	@DirtiesContext
-	void shouldReturn404WhenUserIsNotFound() throws Exception{
+	void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception{
 		int userId = 99;
 		ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + userId, String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
