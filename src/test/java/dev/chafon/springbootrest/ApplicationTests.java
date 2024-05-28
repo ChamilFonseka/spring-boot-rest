@@ -19,6 +19,7 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
+import static dev.chafon.springbootrest.user.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -128,5 +129,62 @@ class ApplicationTests {
 		//Or ObjectMapper
 		String expected = "{\"type\":\"about:blank\",\"title\":\"Not Found\",\"status\":404,\"detail\":\"User not found with the id: 99\",\"instance\":\"/api/v1/users/99\"}";
 		JSONAssert.assertEquals(expected, response.getBody(), true);
+	}
+
+	@Test
+	void shouldCreateUser() {
+		User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+
+		ResponseEntity<Void> response = restTemplate.postForEntity(BASE_URL, john, Void.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+		assertThat(response.getHeaders().getLocation()).isNotNull();
+
+		ResponseEntity<String> responseUser = restTemplate.getForEntity(response.getHeaders().getLocation(), String.class);
+
+		DocumentContext documentContext = JsonPath.parse(responseUser.getBody());
+
+		Integer id = documentContext.read("$.id");
+		assertThat(id).isNotNull();
+
+		String name = documentContext.read("$.name");
+		assertThat(name).isEqualTo(john.name());
+
+		String username = documentContext.read("$.username");
+		assertThat(username).isEqualTo(john.username());
+
+		String email = documentContext.read("$.email");
+		assertThat(email).isEqualTo(john.email());
+	}
+
+	@Test
+	void shouldReturnBadRequestWhenRequestBodyIsInvalid() {
+		User john = new User(null, null, null, null);
+
+		ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, john, String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+		DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+		String errorMessage = documentContext.read("$.detail");
+		assertThat(errorMessage).contains(NAME_CANNOT_BE_BLANK);
+		assertThat(errorMessage).contains(USERNAME_CANNOT_BE_BLANK);
+		assertThat(errorMessage).contains(EMAIL_CANNOT_BE_BLANK);
+	}
+
+	@Test
+	@DirtiesContext
+	void shouldReturnConflictWhenUserWithSameUserNameAlreadyExist() {
+		User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+		userRepository.save(john);
+
+		User anotherJohn = new User(null, "John Dean", "johnD", "john.dean@mail.com");
+
+		ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, anotherJohn, String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+		DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+		String errorMessage = documentContext.read("$.detail");
+		assertThat(errorMessage).isEqualTo(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + anotherJohn.username());
 	}
 }
