@@ -13,11 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
+import java.util.Optional;
 
 import static dev.chafon.springbootrest.user.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,166 +28,187 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class ApplicationTests {
 
-	public static final String BASE_URL = "/api/v1/users";
-	@Autowired
-	private TestRestTemplate restTemplate;
+    public static final String BASE_URL = "/api/v1/users";
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-	@Autowired
-	private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	private ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-	@Test
-	@DirtiesContext
-	void shouldReturnUserList() throws Exception {
-		User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
-		User jean = new User(2, "Jane Gray", "janeG", "jane.gray@mail.com");
-		userRepository.save(john);
-		userRepository.save(jean);
+    @Test
+    @DirtiesContext
+    void shouldReturnUserList() throws Exception {
+        User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+        User jean = new User(2, "Jane Gray", "janeG", "jane.gray@mail.com");
+        userRepository.save(john);
+        userRepository.save(jean);
 
-		ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL, String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		//Can use DocumentContext
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
-		
-		int userCount = documentContext.read("$.length()");
-		assertThat(userCount).isEqualTo(2);
+        //Can use DocumentContext
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
 
-		JSONArray ids = documentContext.read("$..id");
-		assertThat(ids).containsExactlyInAnyOrder(1, 2);
+        int userCount = documentContext.read("$.length()");
+        assertThat(userCount).isEqualTo(2);
 
-		JSONArray names = documentContext.read("$..name");
-		assertThat(names).containsExactlyInAnyOrder("John Doe", "Jane Gray");
+        JSONArray ids = documentContext.read("$..id");
+        assertThat(ids).containsExactlyInAnyOrder(1, 2);
 
-		int id1 = documentContext.read("[0].id");
-		assertThat(id1).isEqualTo(john.id());
+        JSONArray names = documentContext.read("$..name");
+        assertThat(names).containsExactlyInAnyOrder("John Doe", "Jane Gray");
 
-		int id2 = documentContext.read("[1].id");
-		assertThat(id2).isEqualTo(jean.id());
+        int id1 = documentContext.read("[0].id");
+        assertThat(id1).isEqualTo(john.id());
 
-		String name1 = documentContext.read("[0].name");
-		assertThat(name1).isEqualTo(john.name());
+        int id2 = documentContext.read("[1].id");
+        assertThat(id2).isEqualTo(jean.id());
 
-		String name2 = documentContext.read("[1].name");
-		assertThat(name2).isEqualTo(jean.name());
+        String name1 = documentContext.read("[0].name");
+        assertThat(name1).isEqualTo(john.name());
 
-		//Or ObjectMapper
-		String expected = objectMapper.writeValueAsString(List.of(john, jean));
-		JSONAssert.assertEquals(expected, response.getBody(), true);
-	}
+        String name2 = documentContext.read("[1].name");
+        assertThat(name2).isEqualTo(jean.name());
 
-	@Test
-	void shouldReturnAnEmptyUserList() {
-		ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL, String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        //Or ObjectMapper
+        String expected = objectMapper.writeValueAsString(List.of(john, jean));
+        JSONAssert.assertEquals(expected, response.getBody(), true);
+    }
 
-		//Can use DocumentContext
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
+    @Test
+    void shouldReturnAnEmptyUserList() {
+        ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		int userCount = documentContext.read("$.length()");
-		assertThat(userCount).isEqualTo(0);
+        //Can use DocumentContext
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
 
-		//Or
-		assertThat(response.getBody()).isEqualTo("[]");
-	}
+        int userCount = documentContext.read("$.length()");
+        assertThat(userCount).isEqualTo(0);
 
-	@Test
-	@DirtiesContext
-	void shouldReturnTheUser() throws Exception {
-		User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
-		userRepository.save(john);
+        //Or
+        assertThat(response.getBody()).isEqualTo("[]");
+    }
 
-		ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + john.id(), String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    @Test
+    @DirtiesContext
+    void shouldReturnTheUser() throws Exception {
+        User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
+        userRepository.save(john);
 
-		//Can use DocumentContext
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
+        ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + john.id(), String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		int id = documentContext.read("$.id");
-		assertThat(id).isEqualTo(john.id());
+        //Can use DocumentContext
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
 
-		String name = documentContext.read("$.name");
-		assertThat(name).isEqualTo(john.name());
+        int id = documentContext.read("$.id");
+        assertThat(id).isEqualTo(john.id());
 
-		//Or ObjectMapper
-		String expected = objectMapper.writeValueAsString(john);
-		JSONAssert.assertEquals(expected, response.getBody(), true);
-	}
+        String name = documentContext.read("$.name");
+        assertThat(name).isEqualTo(john.name());
 
-	@Test
-	@DirtiesContext
-	void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception{
-		int userId = 99;
-		ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + userId, String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        //Or ObjectMapper
+        String expected = objectMapper.writeValueAsString(john);
+        JSONAssert.assertEquals(expected, response.getBody(), true);
+    }
 
-		//Can use DocumentContext
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
+    @Test
+    @DirtiesContext
+    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+        int userId = 99;
+        ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + userId, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
-		String message = documentContext.read("$.detail");
-		assertThat(message).isEqualTo(Constants.USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
+        //Can use DocumentContext
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
 
-		//Or ObjectMapper
-		String expected = "{\"type\":\"about:blank\",\"title\":\"Not Found\",\"status\":404,\"detail\":\"User not found with the id: 99\",\"instance\":\"/api/v1/users/99\"}";
-		JSONAssert.assertEquals(expected, response.getBody(), true);
-	}
+        String message = documentContext.read("$.detail");
+        assertThat(message).isEqualTo(Constants.USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
 
-	@Test
-	void shouldCreateUser() {
-		User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+        //Or ObjectMapper
+        String expected = "{\"type\":\"about:blank\",\"title\":\"Not Found\",\"status\":404,\"detail\":\"User not found with the id: 99\",\"instance\":\"/api/v1/users/99\"}";
+        JSONAssert.assertEquals(expected, response.getBody(), true);
+    }
 
-		ResponseEntity<Void> response = restTemplate.postForEntity(BASE_URL, john, Void.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-		assertThat(response.getHeaders().getLocation()).isNotNull();
+    @Test
+    void shouldCreateUser() {
+        User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
-		ResponseEntity<String> responseUser = restTemplate.getForEntity(response.getHeaders().getLocation(), String.class);
+        ResponseEntity<Void> response = restTemplate.postForEntity(BASE_URL, john, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getHeaders().getLocation()).isNotNull();
 
-		DocumentContext documentContext = JsonPath.parse(responseUser.getBody());
+        ResponseEntity<String> responseUser = restTemplate.getForEntity(response.getHeaders().getLocation(), String.class);
 
-		Integer id = documentContext.read("$.id");
-		assertThat(id).isNotNull();
+        DocumentContext documentContext = JsonPath.parse(responseUser.getBody());
 
-		String name = documentContext.read("$.name");
-		assertThat(name).isEqualTo(john.name());
+        Integer id = documentContext.read("$.id");
+        assertThat(id).isNotNull();
 
-		String username = documentContext.read("$.username");
-		assertThat(username).isEqualTo(john.username());
+        String name = documentContext.read("$.name");
+        assertThat(name).isEqualTo(john.name());
 
-		String email = documentContext.read("$.email");
-		assertThat(email).isEqualTo(john.email());
-	}
+        String username = documentContext.read("$.username");
+        assertThat(username).isEqualTo(john.username());
 
-	@Test
-	void shouldReturnBadRequestWhenRequestBodyIsInvalid() {
-		User john = new User(null, null, null, null);
+        String email = documentContext.read("$.email");
+        assertThat(email).isEqualTo(john.email());
+    }
 
-		ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, john, String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    @Test
+    void shouldReturnBadRequestWhenRequestBodyIsInvalid() {
+        User john = new User(null, null, null, null);
 
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
+        ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, john, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
-		String errorMessage = documentContext.read("$.detail");
-		assertThat(errorMessage).contains(NAME_CANNOT_BE_BLANK);
-		assertThat(errorMessage).contains(USERNAME_CANNOT_BE_BLANK);
-		assertThat(errorMessage).contains(EMAIL_CANNOT_BE_BLANK);
-	}
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
 
-	@Test
-	@DirtiesContext
-	void shouldReturnConflictWhenUserWithSameUserNameAlreadyExist() {
-		User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
-		userRepository.save(john);
+        String errorMessage = documentContext.read("$.detail");
+        assertThat(errorMessage).contains(NAME_CANNOT_BE_BLANK);
+        assertThat(errorMessage).contains(USERNAME_CANNOT_BE_BLANK);
+        assertThat(errorMessage).contains(EMAIL_CANNOT_BE_BLANK);
+    }
 
-		User anotherJohn = new User(null, "John Dean", "johnD", "john.dean@mail.com");
+    @Test
+    @DirtiesContext
+    void shouldReturnConflictWhenUserWithSameUserNameAlreadyExist() {
+        User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
+        userRepository.save(john);
 
-		ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, anotherJohn, String.class);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        User anotherJohn = new User(null, "John Dean", "johnD", "john.dean@mail.com");
 
-		DocumentContext documentContext = JsonPath.parse(response.getBody());
+        ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, anotherJohn, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 
-		String errorMessage = documentContext.read("$.detail");
-		assertThat(errorMessage).isEqualTo(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + anotherJohn.username());
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+        assertThat(errorMessage).isEqualTo(USER_ALREADY_EXISTS_EXCEPTION_MESSAGE + anotherJohn.username());
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldUpdateTheUser() {
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+        User userToUpdate = new User(user.id(), "John Doe", "johnD", "new.john.doe@mail.com");
+
+		ResponseEntity<String> response = restTemplate
+                .exchange(BASE_URL + "/" + userToUpdate.id(),
+                        HttpMethod.PUT,
+                        new HttpEntity<>(userToUpdate),
+                        String.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+		Optional<User> updatedUser = userRepository.findById(userToUpdate.id());
+		assertThat(updatedUser).isPresent();
+		assertThat(updatedUser.get().name()).isEqualTo(userToUpdate.name());
+		assertThat(updatedUser.get().username()).isEqualTo(userToUpdate.username());
+		assertThat(updatedUser.get().email()).isEqualTo(userToUpdate.email());
 	}
 }
