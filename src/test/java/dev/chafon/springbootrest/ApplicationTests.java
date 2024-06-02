@@ -211,4 +211,22 @@ class ApplicationTests {
 		assertThat(updatedUser.get().username()).isEqualTo(userToUpdate.username());
 		assertThat(updatedUser.get().email()).isEqualTo(userToUpdate.email());
 	}
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingUserDoesNotExist() {
+        User userToUpdate = new User(99, "John Doe", "johnD", "new.john.doe@mail.com");
+
+        ResponseEntity<String> response = restTemplate
+                .exchange(BASE_URL + "/" + userToUpdate.id(),
+                        HttpMethod.PUT,
+                        new HttpEntity<>(userToUpdate),
+                        String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+        assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + userToUpdate.id());
+    }
 }
