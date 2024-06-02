@@ -197,20 +197,20 @@ class ApplicationTests {
         User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
         User userToUpdate = new User(user.id(), "John Doe", "johnD", "new.john.doe@mail.com");
 
-		ResponseEntity<String> response = restTemplate
+        ResponseEntity<String> response = restTemplate
                 .exchange(BASE_URL + "/" + userToUpdate.id(),
                         HttpMethod.PUT,
                         new HttpEntity<>(userToUpdate),
                         String.class);
 
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-		Optional<User> updatedUser = userRepository.findById(userToUpdate.id());
-		assertThat(updatedUser).isPresent();
-		assertThat(updatedUser.get().name()).isEqualTo(userToUpdate.name());
-		assertThat(updatedUser.get().username()).isEqualTo(userToUpdate.username());
-		assertThat(updatedUser.get().email()).isEqualTo(userToUpdate.email());
-	}
+        Optional<User> updatedUser = userRepository.findById(userToUpdate.id());
+        assertThat(updatedUser).isPresent();
+        assertThat(updatedUser.get().name()).isEqualTo(userToUpdate.name());
+        assertThat(updatedUser.get().username()).isEqualTo(userToUpdate.username());
+        assertThat(updatedUser.get().email()).isEqualTo(userToUpdate.email());
+    }
 
     @Test
     void shouldReturnNotFoundWhenUpdatingUserDoesNotExist() {
@@ -228,5 +228,35 @@ class ApplicationTests {
 
         String errorMessage = documentContext.read("$.detail");
         assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + userToUpdate.id());
+    }
+
+    @Test
+    void shouldDeleteTheUser() {
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+
+        ResponseEntity<Void> response = restTemplate.exchange(BASE_URL + "/" + user.id(),
+                HttpMethod.DELETE,
+                null,
+                Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        Optional<User> deletedUser = userRepository.findById(user.id());
+        assertThat(deletedUser).isNotPresent();
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenDeletingUserDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(BASE_URL + "/99",
+                HttpMethod.DELETE,
+                null,
+                String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+        assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + 99);
     }
 }
