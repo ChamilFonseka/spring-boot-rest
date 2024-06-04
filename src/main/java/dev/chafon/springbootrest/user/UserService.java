@@ -4,8 +4,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static dev.chafon.springbootrest.user.Constants.USER_ALREADY_EXISTS_EXCEPTION_MESSAGE;
-
 @Service
 public class UserService {
 

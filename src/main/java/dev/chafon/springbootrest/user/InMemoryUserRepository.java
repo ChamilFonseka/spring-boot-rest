@@ -37,7 +37,7 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public User save(User user) {
         Objects.requireNonNull(user, USER_CANNOT_BE_NULL);
-        User userToSave = null;
+        User userToSave;
         if(user.id() != null && userMap.containsKey(user.id())) {
             User existingUser = userMap.get(user.id());
             userToSave = new User(existingUser.id(), user.name(), existingUser.username(), user.email());
