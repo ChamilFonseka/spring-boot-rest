@@ -30,6 +30,7 @@ public class UserController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         User userCreated = userService.createUser(user);
 
