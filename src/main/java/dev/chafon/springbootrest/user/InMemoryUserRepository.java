@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static dev.chafon.springbootrest.user.Constants.*;
+import static dev.chafon.springbootrest.Constants.*;
 
 @Repository
 @Validated

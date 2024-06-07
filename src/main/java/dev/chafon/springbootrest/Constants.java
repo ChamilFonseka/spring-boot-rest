@@ -1,4 +1,4 @@
-package dev.chafon.springbootrest.user;
+package dev.chafon.springbootrest;
 
 public final class Constants {
     public static final String USER_NOT_FOUND_EXCEPTION_MESSAGE = "User not found with the id: ";

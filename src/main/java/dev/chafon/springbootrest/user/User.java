@@ -3,7 +3,7 @@ package dev.chafon.springbootrest.user;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-import static dev.chafon.springbootrest.user.Constants.*;
+import static dev.chafon.springbootrest.Constants.*;
 
 public record User(
         Integer id,

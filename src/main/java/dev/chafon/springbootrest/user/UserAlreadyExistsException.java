@@ -1,6 +1,6 @@
 package dev.chafon.springbootrest.user;
 
-import static dev.chafon.springbootrest.user.Constants.USER_ALREADY_EXISTS_EXCEPTION_MESSAGE;
+import static dev.chafon.springbootrest.Constants.USER_ALREADY_EXISTS_EXCEPTION_MESSAGE;
 
 public class UserAlreadyExistsException extends RuntimeException {
 

@@ -1,13 +1,14 @@
 package dev.chafon.springbootrest.user;
 
+import dev.chafon.springbootrest.Constants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 
-import static dev.chafon.springbootrest.user.Constants.ID_CANNOT_BE_NULL;
-import static dev.chafon.springbootrest.user.Constants.USERNAME_CANNOT_BE_NULL;
+import static dev.chafon.springbootrest.Constants.ID_CANNOT_BE_NULL;
+import static dev.chafon.springbootrest.Constants.USERNAME_CANNOT_BE_NULL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

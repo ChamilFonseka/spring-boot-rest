@@ -3,7 +3,6 @@ package dev.chafon.springbootrest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import dev.chafon.springbootrest.user.Constants;
 import dev.chafon.springbootrest.user.User;
 import dev.chafon.springbootrest.user.UserRepository;
 import net.minidev.json.JSONArray;
@@ -22,7 +21,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.chafon.springbootrest.user.Constants.*;
+import static dev.chafon.springbootrest.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

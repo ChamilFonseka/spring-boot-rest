@@ -9,7 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static dev.chafon.springbootrest.user.Constants.*;
+import static dev.chafon.springbootrest.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.BDDMockito.given;
