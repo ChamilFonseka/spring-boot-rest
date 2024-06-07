@@ -22,5 +22,7 @@ jobs:
           cache: gradle
 
       - name: Build, unit tests and integration tests
-        run: ./gradlew build
+        run: |
+          chmod +x gradlew
+          ./gradlew build
 
