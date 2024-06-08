@@ -1,10 +1,9 @@
-package dev.chafon.springbootrest;
+package dev.chafon.springbootrest.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import dev.chafon.springbootrest.user.User;
-import dev.chafon.springbootrest.user.UserRepository;
+import dev.chafon.springbootrest.Constants;
 import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -25,7 +24,7 @@ import static dev.chafon.springbootrest.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-class ApplicationTests {
+class UserIntegrationTest {
 
     public static final String BASE_URL = "/api/v1/users";
     @Autowired
