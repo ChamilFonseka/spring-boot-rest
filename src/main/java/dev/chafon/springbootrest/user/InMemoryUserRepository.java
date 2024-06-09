@@ -38,8 +38,11 @@ public class InMemoryUserRepository implements UserRepository {
     public User save(User user) {
         Objects.requireNonNull(user, USER_CANNOT_BE_NULL);
         User userToSave;
-        if(user.id() != null && userMap.containsKey(user.id())) {
+        if(user.id() != null) {
             User existingUser = userMap.get(user.id());
+            if(existingUser == null) {
+                throw new IllegalArgumentException(USER_WITH_ID_DOES_NOT_EXIST + " : " + user.id());
+            }
             userToSave = new User(existingUser.id(), user.name(), existingUser.username(), user.email());
         } else {
             userToSave = new User(userMap.size() + 1, user.name(), user.username(), user.email());

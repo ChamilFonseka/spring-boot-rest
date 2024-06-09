@@ -6,7 +6,7 @@ import java.util.Optional;
 public interface UserRepository {
     List<User> findAll();
     Optional<User> findById(Integer id);
-    User save(User userToCreate);
+    User save(User user);
     boolean existsByUsername(String username);
     void deleteById(Integer id);
     boolean existsById(Integer id);

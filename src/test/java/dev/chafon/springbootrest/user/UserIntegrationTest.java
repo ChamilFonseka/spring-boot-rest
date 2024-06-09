@@ -39,10 +39,10 @@ class UserIntegrationTest {
     @Test
     @DirtiesContext
     void shouldReturnUserList() throws Exception {
-        User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
-        User jean = new User(2, "Jane Gray", "janeG", "jane.gray@mail.com");
-        userRepository.save(john);
-        userRepository.save(jean);
+        User john = userRepository.save(
+                new User(null, "John Doe", "johnD", "john.doe@mail.com"));
+        User jean = userRepository.save(
+                new User(null, "Jane Gray", "janeG", "jane.gray@mail.com"));
 
         ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -94,8 +94,8 @@ class UserIntegrationTest {
     @Test
     @DirtiesContext
     void shouldReturnTheUser() throws Exception {
-        User john = new User(1, "John Doe", "johnD", "john.doe@mail.com");
-        userRepository.save(john);
+        User john = userRepository.save(
+                new User(null, "John Doe", "johnD", "john.doe@mail.com"));
 
         ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + john.id(), String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
