@@ -7,57 +7,58 @@ import java.util.List;
 @Service
 public class UserService {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
 
-    public UserService(UserRepository repository) {
-        this.repository = repository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public List<User> getUsers() {
-        return repository.findAll();
+        return userRepository.findAll();
     }
 
     public User getUser(Integer id) {
-        return repository.findById(id)
+        return userRepository.findById(id)
                 .orElseThrow(() ->
                         new UserNotFoundException(id));
     }
 
     public User createUser(User user) {
-        if(repository.existsByUsername(user.username())) {
+        if (userRepository.existsByUsername(user.username())) {
             throw new UserAlreadyExistsException(user.username());
         }
-        return repository.save(user);
+        return userRepository.save(user);
     }
 
     public void updateUser(Integer id, User user) {
         //If it is required to return the updated user, use the following code:
         /*
-        repository.findById(id)
+        return userRepository.findById(id)
                 .map(existingUser -> {
                     new User(existingUser.id(), user.name(), existingUser.username(), user.email());
-                    return repository.save(existingUser);
+                    return userRepository.save(existingUser);
                 })
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_EXCEPTION_MESSAGE + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
         */
 
-        repository.findById(id)
+        userRepository.findById(id)
                 .ifPresentOrElse(
-                        existingUser -> repository.save(new User(
-                                existingUser.id(),
-                                user.name(),
-                                existingUser.username(),
-                                user.email()
-                        )),
+                        existingUser -> userRepository.save(
+                                new User(
+                                        existingUser.id(),
+                                        user.name(),
+                                        existingUser.username(),
+                                        user.email()
+                                )),
                         () -> {
                             throw new UserNotFoundException(id);
                         });
     }
 
     public void deleteUser(Integer id) {
-        if(!repository.existsById(id)) {
+        if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
         }
-        repository.deleteById(id);
+        userRepository.deleteById(id);
     }
 }

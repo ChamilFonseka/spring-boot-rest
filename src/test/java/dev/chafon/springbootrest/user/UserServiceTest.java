@@ -28,10 +28,10 @@ class UserServiceTest {
     private UserService userService;
 
     @Captor
-    private ArgumentCaptor<User> userCaptor;
+    private ArgumentCaptor<User> argumentCaptor;
 
     @Test
-    void shouldReturnUsers() {
+    void shouldReturnAllUsers() {
         given(userRepository.findAll()).willReturn(List.of(
                 new User(1, "John Doe", "johnD", "john.doe@mail.com"),
                 new User(2, "Jane Doe", "janeD", "jane.doe@mail.com")
@@ -89,7 +89,7 @@ class UserServiceTest {
     void shouldCreateUserAndReturnIt() {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
-        int expectedId = 123;
+        Integer expectedId = 123;
         given(userRepository.save(userToCreate))
                 .willReturn(
                         new User(expectedId, userToCreate.name(), userToCreate.username(), userToCreate.email())
@@ -100,9 +100,10 @@ class UserServiceTest {
         assertThat(userCreated).isNotNull();
         assertThat(userCreated.id()).isEqualTo(expectedId);
 
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).save(argumentCaptor.capture());
 
-        User capturedUser = userCaptor.getValue();
+        User capturedUser = argumentCaptor.getValue();
+        assertThat(capturedUser.id()).isNull();
         assertThat(capturedUser.name()).isEqualTo(userToCreate.name());
         assertThat(capturedUser.username()).isEqualTo(userToCreate.username());
         assertThat(capturedUser.email()).isEqualTo(userToCreate.email());
@@ -124,22 +125,25 @@ class UserServiceTest {
 
     @Test
     void shouldUpdateUser() {
-        User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
-        given(userRepository.findById(userToUpdate.id())).willReturn(Optional.of(userToUpdate));
+        User userToUpdate = new User(1, "Updated name", "johnD", "updated@mail.com");
+
+        given(userRepository.findById(userToUpdate.id()))
+                .willReturn(Optional.of(new User(userToUpdate.id(), "Existing name", "johnD", "existing@mail.com")));
 
         userService.updateUser(userToUpdate.id(), userToUpdate);
 
         verify(userRepository).findById(userToUpdate.id());
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).save(argumentCaptor.capture());
 
-        User capturedUser = userCaptor.getValue();
+        User capturedUser = argumentCaptor.getValue();
+        assertThat(capturedUser.id()).isEqualTo(userToUpdate.id());
         assertThat(capturedUser.name()).isEqualTo(userToUpdate.name());
         assertThat(capturedUser.username()).isEqualTo(userToUpdate.username());
         assertThat(capturedUser.email()).isEqualTo(userToUpdate.email());
     }
 
     @Test
-    void shouldThrowUserNotFoundExceptionWhenUserNotExist() {
+    void shouldThrowUserNotFoundExceptionWhenUpdatingUserNotExist() {
         User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
 
         assertThatThrownBy(() -> userService.updateUser(userToUpdate.id(), userToUpdate))
@@ -154,14 +158,15 @@ class UserServiceTest {
     void shouldNotUpdateTheUsernameAlways() {
         User existingUser = new User(1, "John Doe", "johnD", "john.doe@mail.com");
         User userToUpdate = new User(1, "J D", "johnDoe", "john.doe@abc.com");
-        given(userRepository.findById(userToUpdate.id())).willReturn(Optional.of(existingUser));
+        given(userRepository.findById(userToUpdate.id()))
+                .willReturn(Optional.of(existingUser));
 
         userService.updateUser(userToUpdate.id(), userToUpdate);
 
         verify(userRepository).findById(userToUpdate.id());
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).save(argumentCaptor.capture());
 
-        User capturedUser = userCaptor.getValue();
+        User capturedUser = argumentCaptor.getValue();
         assertThat(capturedUser.name()).isEqualTo(userToUpdate.name());
         assertThat(capturedUser.username()).isEqualTo(existingUser.username());
         assertThat(capturedUser.email()).isEqualTo(userToUpdate.email());
@@ -170,7 +175,8 @@ class UserServiceTest {
     @Test
     void shouldDelete() {
         Integer idToDelete = 1;
-        given(userRepository.existsById(idToDelete)).willReturn(true);
+        given(userRepository.existsById(idToDelete))
+                .willReturn(true);
 
         userService.deleteUser(idToDelete);
 
@@ -181,7 +187,8 @@ class UserServiceTest {
     @Test
     void shouldThrowUserNotFoundExceptionWhenDeletingUserNotExist() {
         Integer idToDelete = 1;
-        given(userRepository.existsById(idToDelete)).willReturn(false);
+        given(userRepository.existsById(idToDelete))
+                .willReturn(false);
 
         assertThatThrownBy(() -> userService.deleteUser(idToDelete))
                 .isInstanceOf(UserNotFoundException.class)

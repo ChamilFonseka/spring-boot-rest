@@ -16,4 +16,5 @@ public final class Constants {
     public static final String POST_BODY_CANNOT_BE_BLANK = "Post body cannot be blank";
     public static final String POST_CANNOT_BE_NULL = "Post cannot be null";
     public static final String POST_WITH_ID_DOES_NOT_EXIST = "Post with id does not exist";
+    public static final String POST_NOT_FOUND_EXCEPTION_MESSAGE = "Post not found with the id: ";
 }
