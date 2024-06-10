@@ -10,7 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static dev.chafon.springbootrest.Constants.*;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -19,7 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-class UserControllerMvcTest {
+class UserControllerTest {
 
     @MockBean
     private UserService userService;
@@ -33,14 +32,14 @@ class UserControllerMvcTest {
     private final String API_PATH = "/api/v1/users";
 
     @Test
-    void shouldReturnEmptyUserListAnd200WhenNoUser() throws Exception {
+    void shouldReturnEmptyListAndStatusOkWhenNoUsers() throws Exception {
         mvc.perform(get(API_PATH))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    void shouldReturnUserListAnd200WhenUsers() throws Exception {
+    void shouldReturnUsersAndStatusOkWhenUsersExist() throws Exception {
         List<User> users = List.of(
                 new User(1, "John Doe", "johnD", "john.doe@mail.com"),
                 new User(2, "Jane Doe", "janeD", "jane.doe@mail.com")
@@ -62,7 +61,7 @@ class UserControllerMvcTest {
     }
 
     @Test
-    void shouldReturnUserWith200WhenUserExists() throws Exception {
+    void shouldReturnTheUserWithStatusOkWhenUserExists() throws Exception {
         User user = new User(1, "John Doe", "johnD", "john.doe@mail.com");
         given(userService.getUser(user.id()))
                 .willReturn(user);
@@ -76,8 +75,8 @@ class UserControllerMvcTest {
     }
 
     @Test
-    void shouldReturn404WhenUserDoesNotExist() throws Exception {
-        int idToGet = 100;
+    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+        Integer idToGet = 100;
         willThrow(new UserNotFoundException(idToGet))
                 .given(userService).getUser(idToGet);
 

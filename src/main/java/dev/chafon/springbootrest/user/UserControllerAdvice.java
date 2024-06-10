@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class UserControllerExceptionHandler {
+public class UserControllerAdvice {
 
     @ExceptionHandler(UserNotFoundException.class)
     ErrorResponse handleUserNotFoundException(UserNotFoundException ex) {
