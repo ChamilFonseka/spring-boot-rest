@@ -61,7 +61,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnTheUserWithStatusOkWhenUserExists() throws Exception {
+    void shouldReturnUserAndStatusOkWhenUserExists() throws Exception {
         User user = new User(1, "John Doe", "johnD", "john.doe@mail.com");
         given(userService.getUser(user.id()))
                 .willReturn(user);
@@ -75,7 +75,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+    void shouldReturnStatusNotFoundWhenUserDoesNotExist() throws Exception {
         Integer idToGet = 100;
         willThrow(new UserNotFoundException(idToGet))
                 .given(userService).getUser(idToGet);
@@ -88,7 +88,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldCreateUserThenReturnCreatedUserAndLocationWith201() throws Exception {
+    void shouldCreateUserAndReturnUserAndLocationAndStatusCreated() throws Exception {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
         User userCreated = new User(123, "John Doe", "johnD", "john.doe@mail.com");
 
@@ -105,7 +105,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldNotCreateUserWhenUserToCreateIsInvalidThenReturn400() throws Exception {
+    void shouldReturnStatusBadRequestWhenUserToCreateIsInvalid() throws Exception {
         User userToCreate = new User(null, null, null, null);
 
         mvc.perform(post(API_PATH)
@@ -118,7 +118,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldNotCreateUserWhenUserAlreadyExistsThenReturn409() throws Exception {
+    void shouldReturnStatusConflictWhenUserAlreadyExists() throws Exception {
         User userToCreate = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
         willThrow(new UserAlreadyExistsException(userToCreate.username()))
@@ -132,7 +132,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldUpdateUserThenReturn202() throws Exception {
+    void shouldUpdateUserAndReturnStatusNoContent() throws Exception {
         User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
 
         mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
@@ -142,7 +142,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldNotUpdateUserWhenUserToUpdateIsInvalidThenReturn400() throws Exception {
+    void shouldReturnStatusBadRequestWhenUpdatingUserIsInvalid() throws Exception {
         User userToUpdate = new User(1, null, null, null);
 
         mvc.perform(put(API_PATH + "/{id}", userToUpdate.id())
@@ -155,7 +155,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldNotUpdateUserWhenUserToUpdateDoesNotExistThenReturn404() throws Exception {
+    void shouldReturnStatusNotFoundWhenUpdatingUserDoesNotExists() throws Exception {
         User userToUpdate = new User(100, "John Doe", "johnD", "john.doe@mail.com");
 
         willThrow(new UserNotFoundException(userToUpdate.id()))
@@ -169,14 +169,14 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldDeleteUserThenReturn204() throws Exception {
+    void shouldDeleteUserAndReturnStatusNoContent() throws Exception {
         mvc.perform(delete(API_PATH + "/{id}", 1))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void shouldReturn404WhenDeletingUserNotExists() throws Exception {
-        int idToDelete = 100;
+    void shouldReturnStatusNotFoundWhenDeletingUserNotExists() throws Exception {
+        Integer idToDelete = 100;
         willThrow(new UserNotFoundException(idToDelete))
                 .given(userService).deleteUser(idToDelete);
 
