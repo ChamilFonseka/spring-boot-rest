@@ -38,7 +38,7 @@ class UserIntegrationTest {
 
     @Test
     @DirtiesContext
-    void shouldReturnUserList() throws Exception {
+    void shouldReturnUsers() throws Exception {
         User john = userRepository.save(
                 new User(null, "John Doe", "johnD", "john.doe@mail.com"));
         User jean = userRepository.save(
@@ -54,15 +54,15 @@ class UserIntegrationTest {
         assertThat(userCount).isEqualTo(2);
 
         JSONArray ids = documentContext.read("$..id");
-        assertThat(ids).containsExactlyInAnyOrder(1, 2);
+        assertThat(ids).containsExactlyInAnyOrder(john.id(), jean.id());
 
         JSONArray names = documentContext.read("$..name");
-        assertThat(names).containsExactlyInAnyOrder("John Doe", "Jane Gray");
+        assertThat(names).containsExactlyInAnyOrder(john.name(), jean.name());
 
-        int id1 = documentContext.read("[0].id");
+        Integer id1 = documentContext.read("[0].id");
         assertThat(id1).isEqualTo(john.id());
 
-        int id2 = documentContext.read("[1].id");
+        Integer id2 = documentContext.read("[1].id");
         assertThat(id2).isEqualTo(jean.id());
 
         String name1 = documentContext.read("[0].name");
@@ -116,7 +116,7 @@ class UserIntegrationTest {
 
     @Test
     @DirtiesContext
-    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+    void shouldReturnStatusNotFoundWhenUserDoesNotExist() throws Exception {
         int userId = 99;
         ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/" + userId, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -127,7 +127,7 @@ class UserIntegrationTest {
         String message = documentContext.read("$.detail");
         assertThat(message).isEqualTo(Constants.USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
 
-        //Or ObjectMapper
+        //Or
         String expected = "{\"type\":\"about:blank\",\"title\":\"Not Found\",\"status\":404,\"detail\":\"User not found with the id: 99\",\"instance\":\"/api/v1/users/99\"}";
         JSONAssert.assertEquals(expected, response.getBody(), true);
     }
@@ -136,13 +136,13 @@ class UserIntegrationTest {
     void shouldCreateUser() {
         User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
 
-        ResponseEntity<Void> response = restTemplate.postForEntity(BASE_URL, john, Void.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getHeaders().getLocation()).isNotNull();
+        ResponseEntity<Void> userCreatedResponse = restTemplate.postForEntity(BASE_URL, john, Void.class);
+        assertThat(userCreatedResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(userCreatedResponse.getHeaders().getLocation()).isNotNull();
 
-        ResponseEntity<String> responseUser = restTemplate.getForEntity(response.getHeaders().getLocation(), String.class);
+        ResponseEntity<String> userGetResponse = restTemplate.getForEntity(userCreatedResponse.getHeaders().getLocation(), String.class);
 
-        DocumentContext documentContext = JsonPath.parse(responseUser.getBody());
+        DocumentContext documentContext = JsonPath.parse(userGetResponse.getBody());
 
         Integer id = documentContext.read("$.id");
         assertThat(id).isNotNull();
@@ -158,7 +158,7 @@ class UserIntegrationTest {
     }
 
     @Test
-    void shouldReturnBadRequestWhenRequestBodyIsInvalid() {
+    void shouldReturnStatusBadRequestWhenUserIsInvalid() {
         User john = new User(null, null, null, null);
 
         ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL, john, String.class);
@@ -211,7 +211,7 @@ class UserIntegrationTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUpdatingUserDoesNotExist() {
+    void shouldReturnStatusNotFoundWhenUpdatingUserDoesNotExist() {
         User userToUpdate = new User(99, "John Doe", "johnD", "new.john.doe@mail.com");
 
         ResponseEntity<String> response = restTemplate
