@@ -1,5 +1,6 @@
 package dev.chafon.springbootrest.post;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -8,14 +9,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static dev.chafon.springbootrest.Constants.POST_NOT_FOUND_EXCEPTION_MESSAGE;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static dev.chafon.springbootrest.Constants.*;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PostController.class)
 class PostControllerTest {
@@ -25,6 +25,9 @@ class PostControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private final String API_PATH = "/api/v1/posts";
 
@@ -58,7 +61,7 @@ class PostControllerTest {
     }
 
     @Test
-    void shouldReturnThePostWithStatusOkWhenPostExists() throws Exception {
+    void shouldReturnPostAndStatusOkWhenPostExists() throws Exception {
         Post post = new Post(1, 123, "My first post", "My first post content");
         given(postService.getPost(post.id()))
                 .willReturn(post);
@@ -72,7 +75,7 @@ class PostControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+    void shouldReturnStatusNotFoundWhenPostDoesNotExist() throws Exception {
         Integer idToGet = 100;
         willThrow(new PostNotFoundException(idToGet))
                 .given(postService).getPost(idToGet);
@@ -80,5 +83,89 @@ class PostControllerTest {
         mvc.perform(get(API_PATH + "/{id}", idToGet))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail", equalTo(POST_NOT_FOUND_EXCEPTION_MESSAGE + idToGet)));
+    }
+
+    @Test
+    void shouldCreatePostAndReturnPostAndLocationAndStatusCreated() throws Exception {
+        Post postToCreate = new Post(null, 567, "Java post", "Java post content");
+        Post postCreated = new Post(123, 567, "Java post", "Java post content");
+
+        given(postService.createPost(postToCreate))
+                .willReturn(postCreated);
+
+        mvc.perform(post(API_PATH)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postToCreate)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", equalTo(postCreated.id())))
+                .andExpect(header().exists("Location"))
+                .andExpect(header().string("Location", "http://localhost" + API_PATH + "/" + postCreated.id()));
+    }
+
+    @Test
+    void shouldReturnStatusBadRequestWhenPostToCreateIsInvalid() throws Exception {
+        Post postToCreate = new Post(null, null, null, null);
+
+        mvc.perform(post(API_PATH)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postToCreate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", containsString(POST_USER_CANNOT_BE_NULL)))
+                .andExpect(jsonPath("$.detail", containsString(POST_TITLE_CANNOT_BE_BLANK)))
+                .andExpect(jsonPath("$.detail", containsString(POST_BODY_CANNOT_BE_BLANK)));
+    }
+
+    @Test
+    void shouldUpdatePostAndReturnStatusNoContent() throws Exception {
+        Post postToUpdate = new Post(1, 123, "My first post", "My first post content");
+
+        mvc.perform(put(API_PATH + "/{id}", postToUpdate.id())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postToUpdate)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnStatusBadRequestWhenPostToUpdateIsInvalid() throws Exception {
+        Post postToUpdate = new Post(123, null, null, null);
+
+        mvc.perform(put(API_PATH + "/{id}", postToUpdate.id())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postToUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", containsString(POST_USER_CANNOT_BE_NULL)))
+                .andExpect(jsonPath("$.detail", containsString(POST_TITLE_CANNOT_BE_BLANK)))
+                .andExpect(jsonPath("$.detail", containsString(POST_BODY_CANNOT_BE_BLANK)));
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenPostToUpdateDoesNotExist() throws Exception {
+        Post postToUpdate = new Post(100, 123, "My first post", "My first post content");
+
+        willThrow(new PostNotFoundException(postToUpdate.id()))
+                .given(postService).updatePost(postToUpdate.id(), postToUpdate);
+
+        mvc.perform(put(API_PATH + "/{id}", postToUpdate.id())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postToUpdate)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", containsString(POST_NOT_FOUND_EXCEPTION_MESSAGE + postToUpdate.id())));
+    }
+
+    @Test
+    void shouldDeletePostAndReturnStatusNoContent() throws Exception {
+        mvc.perform(delete(API_PATH + "/{id}", 1))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenPostToDeleteDoesNotExist() throws Exception {
+        Integer idToDelete = 100;
+        willThrow(new PostNotFoundException(idToDelete))
+                .given(postService).deletePost(idToDelete);
+
+        mvc.perform(delete(API_PATH + "/{id}", idToDelete))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", containsString(POST_NOT_FOUND_EXCEPTION_MESSAGE + idToDelete)));
     }
 }

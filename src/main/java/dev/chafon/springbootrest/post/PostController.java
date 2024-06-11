@@ -1,10 +1,12 @@
 package dev.chafon.springbootrest.post;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -25,5 +27,30 @@ public class PostController {
     @GetMapping("/{id}")
     Post getPost(@PathVariable Integer id) {
         return postService.getPost(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    ResponseEntity<Post> createPost(@Valid @RequestBody Post post) {
+        Post createdPost = postService.createPost(post);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdPost.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(createdPost);
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void updatePost(@PathVariable Integer id, @Valid @RequestBody Post post) {
+        postService.updatePost(id, post);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deletePost(@PathVariable Integer id) {
+        postService.deletePost(id);
     }
 }

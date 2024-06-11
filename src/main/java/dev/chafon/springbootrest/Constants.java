@@ -11,7 +11,7 @@ public final class Constants {
     public static final String USER_CANNOT_BE_NULL = "User cannot be null";
     public static final String USER_WITH_ID_DOES_NOT_EXIST = "User with id does not exist";
     public static final String USERNAME_CANNOT_BE_NULL = "Username cannot be null";
-    public static final String POST_USER_CANNOT_BE_BLANK = "Post user cannot be blank";
+    public static final String POST_USER_CANNOT_BE_NULL = "Post user cannot be null";
     public static final String POST_TITLE_CANNOT_BE_BLANK = "Post title cannot be blank";
     public static final String POST_BODY_CANNOT_BE_BLANK = "Post body cannot be blank";
     public static final String POST_CANNOT_BE_NULL = "Post cannot be null";
