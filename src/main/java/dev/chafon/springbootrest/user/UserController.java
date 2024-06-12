@@ -1,5 +1,7 @@
 package dev.chafon.springbootrest.user;
 
+import dev.chafon.springbootrest.post.Post;
+import dev.chafon.springbootrest.post.PostService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final PostService postService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, PostService postService) {
         this.userService = userService;
+        this.postService = postService;
     }
 
     @GetMapping
@@ -53,4 +57,15 @@ public class UserController {
     void deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
     }
+
+    @GetMapping("/{id}/posts")
+    List<Post> getPosts(@PathVariable Integer id) {
+        return postService.getPostsByUser(id);
+    }
+
+    @GetMapping("/{id}/posts/{postId}")
+    Post getPost(@PathVariable Integer id, @PathVariable Integer postId) {
+        return postService.getPostByUser(id, postId);
+    }
+
 }

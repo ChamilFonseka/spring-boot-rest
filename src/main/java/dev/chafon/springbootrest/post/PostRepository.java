@@ -9,4 +9,6 @@ public interface PostRepository {
     Post save(Post post);
     void deleteById(Integer id);
     boolean existsById(Integer id);
+    List<Post> findByUserId(Integer userId);
+    Optional<Post> findByIdAndUserId(Integer id, Integer userId);
 }

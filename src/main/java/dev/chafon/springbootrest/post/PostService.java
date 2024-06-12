@@ -52,4 +52,14 @@ public class PostService {
         }
         postRepository.deleteById(id);
     }
+
+    public List<Post> getPostsByUser(Integer userId) {
+        return postRepository.findByUserId(userId);
+    }
+
+    public Post getPostByUser(Integer userId, Integer postId) {
+        return postRepository.findByIdAndUserId(postId, userId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(postId));
+    }
 }

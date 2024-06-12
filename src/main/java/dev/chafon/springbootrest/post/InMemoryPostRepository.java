@@ -63,4 +63,21 @@ public class InMemoryPostRepository implements PostRepository {
                 .stream()
                 .anyMatch(user -> user.id().equals(id));
     }
+
+    @Override
+    public List<Post> findByUserId(Integer userId) {
+        return postMap.values()
+                .stream()
+                .filter(post -> post.userId().equals(userId))
+                .toList();
+    }
+
+    @Override
+    public Optional<Post> findByIdAndUserId(Integer id, Integer userId) {
+        return postMap.values()
+                .stream()
+                .filter(post -> post.userId().equals(userId))
+                .filter(post -> post.id().equals(id))
+                .findFirst();
+    }
 }
