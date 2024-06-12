@@ -32,29 +32,32 @@ class PostServiceTest {
 
     @Test
     void shouldReturnAllPosts() {
-        given(postRepository.findAll()).willReturn(List.of(
-                new Post(1, 1, "Java Post", "Java post content"),
-                new Post(2, 1, "Spring Post", "Spring post content")
-        ));
+        Post post1 = new Post(1, 1, "Java Post", "Java post content");
+        Post post2 = new Post(2, 1, "Spring Post", "Spring post content");
+        given(postRepository.findAll())
+                .willReturn(List.of(post1, post2));
 
         List<Post> posts = postService.getPosts();
 
         assertThat(posts).hasSize(2);
 
-        assertThat(posts.getFirst().id()).isEqualTo(1);
-        assertThat(posts.getFirst().title()).isEqualTo("Java Post");
-        assertThat(posts.getFirst().body()).isEqualTo("Java post content");
+        assertThat(posts.getFirst().id()).isEqualTo(post1.id());
+        assertThat(posts.getFirst().userId()).isEqualTo(post1.userId());
+        assertThat(posts.getFirst().title()).isEqualTo(post1.title());
+        assertThat(posts.getFirst().body()).isEqualTo(post1.body());
 
-        assertThat(posts.get(1).id()).isEqualTo(2);
-        assertThat(posts.get(1).title()).isEqualTo("Spring Post");
-        assertThat(posts.get(1).body()).isEqualTo("Spring post content");
+        assertThat(posts.get(1).id()).isEqualTo(post2.id());
+        assertThat(posts.get(1).userId()).isEqualTo(post2.userId());
+        assertThat(posts.get(1).title()).isEqualTo(post2.title());
+        assertThat(posts.get(1).body()).isEqualTo(post2.body());
 
         verify(postRepository).findAll();
     }
 
     @Test
     void shouldReturnEmptyListWhenNoPosts() {
-        given(postRepository.findAll()).willReturn(List.of());
+        given(postRepository.findAll())
+                .willReturn(List.of());
 
         List<Post> posts = postService.getPosts();
 
@@ -64,11 +67,10 @@ class PostServiceTest {
     }
 
     @Test
-    void shouldReturnPostWithGivenId() {
+    void shouldReturnPostById() {
         Post post = new Post(1, 1, "Java post", "Java post content");
-        given(postRepository.findById(1)).willReturn(
-                Optional.of(post)
-        );
+        given(postRepository.findById(1))
+                .willReturn(Optional.of(post));
 
         Post foundPost = postService.getPost(post.id());
 
@@ -95,8 +97,10 @@ class PostServiceTest {
         Integer expextedId = 123;
         given(postRepository.save(postToCreate))
                 .willReturn(
-                        new Post(expextedId, postToCreate.userId(), postToCreate.title(), postToCreate.body())
-                );
+                        new Post(expextedId,
+                                postToCreate.userId(),
+                                postToCreate.title(),
+                                postToCreate.body()));
 
         Post postCreated = postService.createPost(postToCreate);
 
@@ -117,7 +121,11 @@ class PostServiceTest {
         Post postToUpdate = new Post(123, 567, "Updated title", "Updated post content");
 
         given(postRepository.findById(postToUpdate.id()))
-                .willReturn(Optional.of(new Post(postToUpdate.id(), postToUpdate.userId(), "Existing title", "Existing post content")));
+                .willReturn(Optional.of(
+                        new Post(postToUpdate.id(),
+                                postToUpdate.userId(),
+                                "Existing title",
+                                "Existing post content")));
 
         postService.updatePost(postToUpdate.id(), postToUpdate);
 
@@ -172,5 +180,57 @@ class PostServiceTest {
 
         verify(postRepository).existsById(idToDelete);
         verify(postRepository, never()).deleteById(idToDelete);
+    }
+
+    @Test
+    void shouldReturnPostsByUserId() {
+        Integer userId = 123;
+        Post post1 = new Post(1, userId, "Post 1", "Post content");
+        Post post2 = new Post(2, userId, "Post 2", "Post content");
+        given(postRepository.findByUserId(userId))
+                .willReturn(List.of(post1, post2));
+
+        List<Post> posts = postService.getPostsByUser(userId);
+
+        assertThat(posts).hasSize(2);
+
+        assertThat(posts.getFirst().id()).isEqualTo(post1.id());
+        assertThat(posts.getFirst().userId()).isEqualTo(post1.userId());
+        assertThat(posts.getFirst().title()).isEqualTo(post1.title());
+        assertThat(posts.getFirst().body()).isEqualTo(post1.body());
+
+        assertThat(posts.get(1).id()).isEqualTo(post2.id());
+        assertThat(posts.get(1).userId()).isEqualTo(post2.userId());
+        assertThat(posts.get(1).title()).isEqualTo(post2.title());
+        assertThat(posts.get(1).body()).isEqualTo(post2.body());
+
+        verify(postRepository).findByUserId(userId);
+    }
+
+    @Test
+    void shouldReturnPostByUserAndId() {
+        Integer userId = 123;
+        Integer postId = 456;
+        Post post = new Post(postId, userId, "Post 1", "Post content");
+        given(postRepository.findByUserIdAndId(userId, postId))
+                .willReturn(Optional.of(post));
+
+        Post foundPost = postService.getPostByUserAndId(userId, postId);
+
+        assertThat(foundPost).isEqualTo(post);
+
+        verify(postRepository).findByUserIdAndId(userId, postId);
+    }
+
+    @Test
+    void shouldThrowPostNotFoundExceptionWhenPostByUserAndIdNotExist() {
+        Integer userId = 123;
+        Integer postId = 456;
+        given(postRepository.findByUserIdAndId(userId, postId))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> postService.getPostByUserAndId(userId, postId))
+                .isInstanceOf(PostNotFoundException.class)
+                .hasMessageContaining(POST_NOT_FOUND_EXCEPTION_MESSAGE + postId);
     }
 }

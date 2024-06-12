@@ -3,7 +3,6 @@ package dev.chafon.springbootrest.post;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PostService {
@@ -57,8 +56,8 @@ public class PostService {
         return postRepository.findByUserId(userId);
     }
 
-    public Post getPostByUser(Integer userId, Integer postId) {
-        return postRepository.findByIdAndUserId(postId, userId)
+    public Post getPostByUserAndId(Integer userId, Integer postId) {
+        return postRepository.findByUserIdAndId(userId, postId)
                 .orElseThrow(() ->
                         new PostNotFoundException(postId));
     }

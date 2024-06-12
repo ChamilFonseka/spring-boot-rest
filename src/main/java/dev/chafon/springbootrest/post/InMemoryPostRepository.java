@@ -1,6 +1,5 @@
 package dev.chafon.springbootrest.post;
 
-import dev.chafon.springbootrest.user.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -73,7 +72,7 @@ public class InMemoryPostRepository implements PostRepository {
     }
 
     @Override
-    public Optional<Post> findByIdAndUserId(Integer id, Integer userId) {
+    public Optional<Post> findByUserIdAndId(Integer userId, Integer id) {
         return postMap.values()
                 .stream()
                 .filter(post -> post.userId().equals(userId))

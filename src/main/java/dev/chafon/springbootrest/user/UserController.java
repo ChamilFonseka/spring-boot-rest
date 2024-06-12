@@ -65,7 +65,7 @@ public class UserController {
 
     @GetMapping("/{id}/posts/{postId}")
     Post getPost(@PathVariable Integer id, @PathVariable Integer postId) {
-        return postService.getPostByUser(id, postId);
+        return postService.getPostByUserAndId(id, postId);
     }
 
 }

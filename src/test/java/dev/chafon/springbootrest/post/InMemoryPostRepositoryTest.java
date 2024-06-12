@@ -152,16 +152,16 @@ public class InMemoryPostRepositoryTest {
     }
 
     @Test
-    void findByIdAndUserId_shouldReturnPost() {
+    void findByUserIdAndId_shouldReturnPost() {
         Post post = saveAPost();
-        Optional<Post> postExpected = repository.findByIdAndUserId(post.id(), post.userId());
+        Optional<Post> postExpected = repository.findByUserIdAndId(post.id(), post.userId());
         assertThat(postExpected).isPresent();
         assertThat(postExpected.get()).isEqualTo(post);
     }
 
     @Test
-    void findByIdAndUserId_shouldReturnEmptyOptionalWhenPostDoesNotExist() {
-        Optional<Post> postExpected = repository.findByIdAndUserId(1, 1);
+    void findByUserIdAndId_shouldReturnEmptyOptionalWhenPostDoesNotExist() {
+        Optional<Post> postExpected = repository.findByUserIdAndId(1, 1);
         assertThat(postExpected).isEmpty();
     }
 
