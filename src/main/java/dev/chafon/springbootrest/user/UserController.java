@@ -60,7 +60,7 @@ public class UserController {
 
     @GetMapping("/{id}/posts")
     List<Post> getPosts(@PathVariable Integer id) {
-        return postService.getPostsByUser(id);
+        return userService.getUserPosts(id);
     }
 
     @GetMapping("/{id}/posts/{postId}")

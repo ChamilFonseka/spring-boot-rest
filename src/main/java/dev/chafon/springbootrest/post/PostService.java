@@ -30,16 +30,15 @@ public class PostService {
     public void updatePost(Integer id, Post postToUpdate) {
         postRepository.findById(id)
                 .ifPresentOrElse(
-                        exisitingPost -> {
-                            postRepository.save(
-                                    new Post(
-                                            exisitingPost.id(),
-                                            postToUpdate.userId(),
-                                            postToUpdate.title(),
-                                            postToUpdate.body()
-                                    )
-                            );
-                        },
+                        exisitingPost ->
+                                postRepository.save(
+                                        new Post(
+                                                exisitingPost.id(),
+                                                postToUpdate.userId(),
+                                                postToUpdate.title(),
+                                                postToUpdate.body()
+                                        )
+                                ),
                         () -> {
                             throw new PostNotFoundException(id);
                         });

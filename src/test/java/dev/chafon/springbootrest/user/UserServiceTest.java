@@ -1,5 +1,7 @@
 package dev.chafon.springbootrest.user;
 
+import dev.chafon.springbootrest.post.Post;
+import dev.chafon.springbootrest.post.PostService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,6 +25,9 @@ import static org.mockito.Mockito.verify;
 class UserServiceTest {
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    PostService poseService;
 
     @InjectMocks
     private UserService userService;
@@ -196,5 +201,39 @@ class UserServiceTest {
 
         verify(userRepository).existsById(idToDelete);
         verify(userRepository, never()).deleteById(idToDelete);
+    }
+
+    @Test
+    void shouldReturnUserPosts() {
+        Integer userId = 123;
+        List<Post> expectedPosts = List.of(
+                new Post(1, 123, "My first post", "My first post content"),
+                new Post(2, 123, "My second post", "My second post content")
+        );
+        given(userRepository.existsById(userId))
+                .willReturn(true);
+        given(poseService.getPostsByUser(userId))
+                .willReturn(expectedPosts);
+
+        List<Post> userPosts = userService.getUserPosts(userId);
+
+        assertThat(userPosts).isEqualTo(expectedPosts);
+
+        verify(userRepository).existsById(userId);
+        verify(poseService).getPostsByUser(userId);
+    }
+
+    @Test
+    void shouldThrowUserNotFoundExceptionWhenUserForPostsNotExist() {
+        Integer userId = 123;
+        given(userRepository.existsById(userId))
+                .willReturn(false);
+
+        assertThatThrownBy(() -> userService.getUserPosts(userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage(USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
+
+        verify(userRepository).existsById(userId);
+        verify(poseService, never()).getPostsByUser(userId);
     }
 }

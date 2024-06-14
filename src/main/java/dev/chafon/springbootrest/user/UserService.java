@@ -1,5 +1,7 @@
 package dev.chafon.springbootrest.user;
 
+import dev.chafon.springbootrest.post.Post;
+import dev.chafon.springbootrest.post.PostService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,9 +10,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PostService postService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PostService postService) {
         this.userRepository = userRepository;
+        this.postService = postService;
     }
 
     public List<User> getUsers() {
@@ -56,9 +60,18 @@ public class UserService {
     }
 
     public void deleteUser(Integer id) {
+        validateUser(id);
+        userRepository.deleteById(id);
+    }
+
+    public List<Post> getUserPosts(Integer id) {
+        validateUser(id);
+        return postService.getPostsByUser(id);
+    }
+
+    private void validateUser(Integer id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
         }
-        userRepository.deleteById(id);
     }
 }

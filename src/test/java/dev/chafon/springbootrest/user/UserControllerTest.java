@@ -1,6 +1,7 @@
 package dev.chafon.springbootrest.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.chafon.springbootrest.post.Post;
 import dev.chafon.springbootrest.post.PostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static dev.chafon.springbootrest.Constants.*;
@@ -187,5 +189,40 @@ class UserControllerTest {
         mvc.perform(delete(API_PATH + "/{id}", idToDelete))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail", containsString(USER_NOT_FOUND_EXCEPTION_MESSAGE + idToDelete)));
+    }
+
+    @Test
+    void shouldReturnPostsForUserAndStatusOkWhenUserExists() throws Exception {
+        Integer userId = 123;
+        List<Post> posts = List.of(
+                new Post(1, 123, "My first post", "My first post content"),
+                new Post(2, 123, "My second post", "My second post content")
+        );
+        given(userService.getUserPosts(userId))
+                .willReturn(posts);
+
+        mvc.perform(get(API_PATH + "/{id}/posts", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", equalTo(posts.getFirst().id())))
+                .andExpect(jsonPath("$[0].userId", equalTo(posts.getFirst().userId())))
+                .andExpect(jsonPath("$[0].title", equalTo(posts.getFirst().title())))
+                .andExpect(jsonPath("$[0].body", equalTo(posts.getFirst().body())))
+                .andExpect(jsonPath("$[1].id", equalTo(posts.get(1).id())))
+                .andExpect(jsonPath("$[1].userId", equalTo(posts.get(1).userId())))
+                .andExpect(jsonPath("$[1].title", equalTo(posts.get(1).title())))
+                .andExpect(jsonPath("$[1].body", equalTo(posts.get(1).body())));
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenUserForPostsDoesNotExist() throws Exception {
+        Integer userId = 100;
+        willThrow(new UserNotFoundException(userId))
+                .given(userService).getUserPosts(userId);
+
+        mvc.perform(get(API_PATH + "/{id}/posts", userId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", containsString(USER_NOT_FOUND_EXCEPTION_MESSAGE + userId)));
+
     }
 }
