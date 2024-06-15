@@ -1,7 +1,6 @@
 package dev.chafon.springbootrest.user;
 
 import dev.chafon.springbootrest.post.Post;
-import dev.chafon.springbootrest.post.PostService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +15,9 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final PostService postService;
 
-    public UserController(UserService userService, PostService postService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.postService = postService;
     }
 
     @GetMapping
@@ -65,7 +62,6 @@ public class UserController {
 
     @GetMapping("/{id}/posts/{postId}")
     Post getPost(@PathVariable Integer id, @PathVariable Integer postId) {
-        return postService.getPostByUserAndId(id, postId);
+        return userService.getUserPost(id, postId);
     }
-
 }
