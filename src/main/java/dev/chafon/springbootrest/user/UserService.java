@@ -69,6 +69,10 @@ public class UserService {
         return postService.getPostsByUser(id);
     }
 
+    public Post getUserPost(Integer id, Integer postId) {
+        validateUser(id);
+        return postService.getPostByUserAndId(id, postId);
+    }
     private void validateUser(Integer id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);

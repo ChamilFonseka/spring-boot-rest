@@ -1,6 +1,7 @@
 package dev.chafon.springbootrest.user;
 
 import dev.chafon.springbootrest.post.Post;
+import dev.chafon.springbootrest.post.PostNotFoundException;
 import dev.chafon.springbootrest.post.PostService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,11 +14,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.chafon.springbootrest.Constants.USER_ALREADY_EXISTS_EXCEPTION_MESSAGE;
-import static dev.chafon.springbootrest.Constants.USER_NOT_FOUND_EXCEPTION_MESSAGE;
+import static dev.chafon.springbootrest.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -148,7 +149,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserNotFoundExceptionWhenUpdatingUserNotExist() {
+    void shouldThrowUserNotFoundExceptionWhenUpdatingUserDoesNotExist() {
         User userToUpdate = new User(1, "John Doe", "johnD", "john.doe@mail.com");
 
         assertThatThrownBy(() -> userService.updateUser(userToUpdate.id(), userToUpdate))
@@ -190,7 +191,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserNotFoundExceptionWhenDeletingUserNotExist() {
+    void shouldThrowUserNotFoundExceptionWhenDeletingUserDoesNotExist() {
         Integer idToDelete = 1;
         given(userRepository.existsById(idToDelete))
                 .willReturn(false);
@@ -224,7 +225,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserNotFoundExceptionWhenUserForPostsNotExist() {
+    void shouldThrowUserNotFoundExceptionWhenUserForPostsDoesNotExist() {
         Integer userId = 123;
         given(userRepository.existsById(userId))
                 .willReturn(false);
@@ -235,5 +236,54 @@ class UserServiceTest {
 
         verify(userRepository).existsById(userId);
         verify(poseService, never()).getPostsByUser(userId);
+    }
+
+    @Test
+    void shouldReturnUserPost() {
+        Integer userId = 123;
+        Post expectedPost = new Post(1, 123, "My first post", "My first post content");
+        given(userRepository.existsById(userId))
+                .willReturn(true);
+        given(poseService.getPostByUserAndId(userId, expectedPost.id()))
+                .willReturn(expectedPost);
+
+        Post userPost = userService.getUserPost(userId, expectedPost.id());
+
+        assertThat(userPost).isEqualTo(expectedPost);
+
+        verify(userRepository).existsById(userId);
+        verify(poseService).getPostByUserAndId(userId, expectedPost.id());
+    }
+
+    @Test
+    void shouldThrowUserNotFoundExceptionWhenUserForPostDoesNotExist() {
+        Integer userId = 123;
+        Integer postId = 1;
+        given(userRepository.existsById(userId))
+                .willReturn(false);
+
+        assertThatThrownBy(() -> userService.getUserPost(userId, postId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage(USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
+
+        verify(userRepository).existsById(userId);
+        verify(poseService, never()).getPostByUserAndId(userId, postId);
+    }
+
+    @Test
+    void shouldThrowPostNotFoundExceptionWhenPostForUserDoesNotExist() {
+        Integer userId = 123;
+        Integer postId = 1;
+        given(userRepository.existsById(userId))
+                .willReturn(true);
+        willThrow(new PostNotFoundException(postId))
+                .given(poseService).getPostByUserAndId(userId, postId);
+
+        assertThatThrownBy(() -> userService.getUserPost(userId, postId))
+                .isInstanceOf(PostNotFoundException.class)
+                .hasMessage(POST_NOT_FOUND_EXCEPTION_MESSAGE + postId);
+
+        verify(userRepository).existsById(userId);
+        verify(poseService).getPostByUserAndId(userId, postId);
     }
 }
