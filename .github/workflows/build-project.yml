@@ -35,7 +35,7 @@ jobs:
         id: scan
         with:
           path: "${{ github.workspace }}"
-          fail-build: false
+          fail-build: true
           severity-cutoff: high
 
       - name: Inspect vulnerability report
