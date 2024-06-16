@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import dev.chafon.springbootrest.Constants;
+import dev.chafon.springbootrest.post.Post;
+import dev.chafon.springbootrest.post.PostRepository;
 import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -34,6 +36,9 @@ class UserIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Test
@@ -59,10 +64,10 @@ class UserIntegrationTest {
         JSONArray names = documentContext.read("$..name");
         assertThat(names).containsExactlyInAnyOrder(john.name(), jean.name());
 
-        Integer id1 = documentContext.read("[0].id");
+        int id1 = documentContext.read("[0].id");
         assertThat(id1).isEqualTo(john.id());
 
-        Integer id2 = documentContext.read("[1].id");
+        int id2 = documentContext.read("[1].id");
         assertThat(id2).isEqualTo(jean.id());
 
         String name1 = documentContext.read("[0].name");
@@ -144,7 +149,7 @@ class UserIntegrationTest {
 
         DocumentContext documentContext = JsonPath.parse(userGetResponse.getBody());
 
-        Integer id = documentContext.read("$.id");
+        int id = documentContext.read("$.id");
         assertThat(id).isNotNull();
 
         String name = documentContext.read("$.name");
@@ -174,7 +179,7 @@ class UserIntegrationTest {
 
     @Test
     @DirtiesContext
-    void shouldReturnConflictWhenUserWithSameUserNameAlreadyExist() {
+    void shouldReturnStatusConflictWhenUserWithSameUserNameAlreadyExist() {
         User john = new User(null, "John Doe", "johnD", "john.doe@mail.com");
         userRepository.save(john);
 
@@ -244,7 +249,7 @@ class UserIntegrationTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenDeletingUserDoesNotExist() {
+    void shouldReturnStatusNotFoundWhenDeletingUserDoesNotExist() {
         ResponseEntity<String> response = restTemplate.exchange(BASE_URL + "/99",
                 HttpMethod.DELETE,
                 null,
@@ -256,5 +261,121 @@ class UserIntegrationTest {
 
         String errorMessage = documentContext.read("$.detail");
         assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + 99);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldReturnUserPosts() {
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+        Post post1 = postRepository.save(new Post(null, user.id(), "Post 1", "Post 1 content"));
+        Post post2 = postRepository.save(new Post(null, user.id(), "Post 2", "Post 2 content"));
+
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + user.id() + "/posts", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        int postCount = documentContext.read("$.length()");
+        assertThat(postCount).isEqualTo(2);
+
+        JSONArray ids = documentContext.read("$..userId");
+        assertThat(ids).containsExactlyInAnyOrder(user.id(), user.id());
+
+        JSONArray titles = documentContext.read("$..title");
+        assertThat(titles).containsExactlyInAnyOrder(post1.title(), post2.title());
+
+        JSONArray bodies = documentContext.read("$..body");
+        assertThat(bodies).containsExactlyInAnyOrder(post1.body(), post2.body());
+    }
+
+    @Test
+    void shouldReturnAnEmptyPostList() {
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + user.id() + "/posts", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        int postCount = documentContext.read("$.length()");
+        assertThat(postCount).isEqualTo(0);
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenUserForPostsDoesNotExist() {
+        int userId = 99;
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + userId + "/posts", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+
+        assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldReturnUserPost() {
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+        Post post = postRepository.save(new Post(null, user.id(), "Post 1", "Post 1 content"));
+
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + user.id() + "/posts/" + post.id(), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        int id = documentContext.read("$.id");
+        assertThat(id).isEqualTo(post.id());
+
+        int userId = documentContext.read("$.userId");
+        assertThat(userId).isEqualTo(post.userId());
+
+        String title = documentContext.read("$.title");
+        assertThat(title).isEqualTo(post.title());
+
+        String body = documentContext.read("$.body");
+        assertThat(body).isEqualTo(post.body());
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenUserForPostDoesNotExist() {
+        int userId = 99;
+
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + userId + "/posts/1", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+
+        assertThat(errorMessage).isEqualTo(USER_NOT_FOUND_EXCEPTION_MESSAGE + userId);
+    }
+
+    @Test
+    void shouldReturnStatusNotFoundWhenPostForUserDoesNotExist() {
+        int postId = 99;
+        User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
+
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                BASE_URL + "/" + user.id() + "/posts/" + postId, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String errorMessage = documentContext.read("$.detail");
+
+        assertThat(errorMessage).isEqualTo(POST_NOT_FOUND_EXCEPTION_MESSAGE + postId);
     }
 }
