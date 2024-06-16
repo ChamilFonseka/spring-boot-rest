@@ -291,6 +291,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldReturnAnEmptyPostList() {
         User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
 
@@ -363,6 +364,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldReturnStatusNotFoundWhenPostForUserDoesNotExist() {
         int postId = 99;
         User user = userRepository.save(new User(null, "John", "johnD", "john.doe@mail.com"));
