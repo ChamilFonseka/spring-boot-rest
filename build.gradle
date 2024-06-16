@@ -22,8 +22,6 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	implementation 'commons-collections:commons-collections:3.2.1'
 }
 
 tasks.named('test') {
