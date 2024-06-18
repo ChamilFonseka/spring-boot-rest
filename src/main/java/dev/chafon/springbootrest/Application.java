@@ -1,5 +1,7 @@
 package dev.chafon.springbootrest;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.chafon.springbootrest.post.Post;
 import dev.chafon.springbootrest.post.PostService;
 import dev.chafon.springbootrest.user.User;
@@ -10,6 +12,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
+import java.io.InputStream;
+import java.util.List;
+
 @SpringBootApplication
 public class Application {
 
@@ -19,18 +24,25 @@ public class Application {
 
 	@Bean
 	@Profile("dev")
-	CommandLineRunner commandLineRunner(UserService userService, PostService postService) {
+	CommandLineRunner commandLineRunner(UserService userService,
+										PostService postService,
+										ObjectMapper objectMapper) {
 		return args -> {
-			User john = userService.createUser(new User(null, "John Doe", "johnD", "john.doe@mail.com"));
-			User jean = userService.createUser(new User(null, "Jean Gray", "janeG", "jane.gray@mail.com"));
-			User bob = userService.createUser(new User(null, "Bob Smith", "bobS", "bob.smith@mail.com"));
-			User alice = userService.createUser(new User(null, "Alice Brown", "aliceB", "alice.brown@mail.com"));
-			User tom = userService.createUser(new User(null, "Tom Wilson", "tomW", "tom.wilson@mail.com"));
+			String usersJson = "/data/users.json";
+            try (InputStream inputStream = TypeReference.class.getResourceAsStream(usersJson)) {
+				List<User> users = objectMapper.readValue(inputStream, new TypeReference<>() {});
+				users.forEach(user -> userService.createUser(
+						new User(null, user.name(), user.username(), user.email())
+				));
+			}
 
-			postService.createPost(new Post(null, john.id(), "Java Multithreading", "Java Multithreading is awesome!"));
-			postService.createPost(new Post(null, john.id(), "Java Spring Boot", "Java Spring Boot is great!"));
-			postService.createPost(new Post(null, alice.id(), "Intro to LLM", "Welcome to LLM!"));
-			postService.createPost(new Post(null, bob.id(), "Data Science", "Data Science is awesome!"));
+			String postsJson = "/data/posts.json";
+			try (InputStream inputStream = TypeReference.class.getResourceAsStream(postsJson)) {
+				List<Post> posts = objectMapper.readValue(inputStream, new TypeReference<>() {});
+				posts.forEach(post -> postService.createPost(
+						new Post(null, post.userId(), post.title(), post.body())
+				));
+			}
 		};
 	}
 
